@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Column Match Statistics Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            font-size: 10px;
+        }
+        
+        .form-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .match-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .team-info {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .columns-container {
+            display: flex;
+            width: 100%;
+        }
+        
+        .team-column {
+            width: 50%;
+            box-sizing: border-box;
+        }
+        
+        .team-a-column {
+            padding-right: 5px;
+        }
+        
+        .team-b-column {
+            padding-left: 5px;
+        }
+        
+        .stat-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-bottom: 10px;
+        }
+        
+        .stat-table, .stat-table th, .stat-table td {
+            border: 1px solid black;
+        }
+        
+        .stat-table th, .stat-table td {
+            padding: 2px;
+            text-align: center;
+            height: 20px;
+        }
+        
+        .small-col {
+            width: 20px;
+        }
+        
+        .medium-col {
+            width: 30px;
+        }
+        
+        .team-a {
+            background-color: #e6f7ff;
+        }
+        
+        .team-b {
+            background-color: #fff2e6;
+        }
+        
+        .time-markers {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .controls {
+            margin: 10px 0;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        select, input, button {
+            font-size: 10px;
+            padding: 3px;
+            margin-right: 5px;
+        }
+        
+        button {
+            cursor: pointer;
+        }
+        
+        .team-title {
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        
+        .footer-table {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="header">M A T C H   S T A T I S T I C S</div>
+        
+        <div class="match-info">
+            <div class="team-info">
+                <div><strong>Team A</strong> vs <strong>Team B</strong></div>
+                <div><strong>Date:</strong> <span id="match-date"></span></div>
+            </div>
+            <div><strong>Match No.:</strong> <span id="match-number">10765</span></div>
+        </div>
+        
+        <div class="time-markers">
+            <div>Half-time(30')</div>
+            <div>End of 60'</div>
+            <div>1st extra time</div>
+            <div>2nd extra time</div>
+        </div>
+        
+        <div class="controls">
+            <strong>Add Event:</strong>
+            <select id="event-type">
+                <option value="GOAL">Goal</option>
+                <option value="7M">7m Goal</option>
+                <option value="TIMEOUT">Timeout</option>
+                <option value="PENALTY">Penalty</option>
+            </select>
+            <select id="event-team">
+                <option value="A">Team A</option>
+                <option value="B">Team B</option>
+            </select>
+            <input type="number" id="event-player" placeholder="Player" min="1" max="99" style="width: 50px;">
+            <button id="add-event">Add</button>
+            <span id="game-time" style="margin-left: 20px;"><strong>Time:</strong> <span id="match-time">00:00</span></span>
+        </div>
+        
+        <!-- Two Column Layout -->
+        <div class="columns-container">
+            <!-- Team A Column (Left) -->
+            <div class="team-column team-a-column">
+                <div class="team-title">TEAM A</div>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">No.</th>
+                            <th rowspan="2">Goals</th>
+                            <th colspan="2">7M</th>
+                            <th colspan="2">Shots</th>
+                            <th colspan="2">Team time-out</th>
+                            <th colspan="2">Team penalties</th>
+                            <th rowspan="2">DR</th>
+                            <th rowspan="2">W</th>
+                            <th rowspan="2">D</th>
+                            <th rowspan="2">C</th>
+                        </tr>
+                        <tr>
+                            <th class="small-col team-a">A</th>
+                            <th class="small-col team-a">B</th>
+                            <th class="small-col team-a">A</th>
+                            <th class="small-col team-a">B</th>
+                            <th class="small-col team-a">A</th>
+                            <th class="small-col team-a">B</th>
+                            <th class="small-col team-a">A</th>
+                            <th class="small-col team-a">B</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body-a">
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Team B Column (Right) -->
+            <div class="team-column team-b-column">
+                <div class="team-title">TEAM B</div>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">No.</th>
+                            <th rowspan="2">Goals</th>
+                            <th colspan="2">7M</th>
+                            <th colspan="2">Shots</th>
+                            <th colspan="2">Team time-out</th>
+                            <th colspan="2">Team penalties</th>
+                            <th rowspan="2">DR</th>
+                            <th rowspan="2">W</th>
+                            <th rowspan="2">D</th>
+                            <th rowspan="2">C</th>
+                        </tr>
+                        <tr>
+                            <th class="small-col team-b">A</th>
+                            <th class="small-col team-b">B</th>
+                            <th class="small-col team-b">A</th>
+                            <th class="small-col team-b">B</th>
+                            <th class="small-col team-b">A</th>
+                            <th class="small-col team-b">B</th>
+                            <th class="small-col team-b">A</th>
+                            <th class="small-col team-b">B</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body-b">
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Common Footer Section -->
+        <table class="stat-table footer-table">
+            <tfoot>
+                <tr>
+                    <td>2'</td>
+                    <td id="goals-2min">0:0</td>
+                    <td class="team-a" id="7m-a-2min">0</td>
+                    <td class="team-b" id="7m-b-2min">0</td>
+                    <td class="team-a" id="shots-a-2min">0</td>
+                    <td class="team-b" id="shots-b-2min">0</td>
+                    <td class="team-a" id="timeout-a-2min"></td>
+                    <td class="team-b" id="timeout-b-2min"></td>
+                    <td class="team-a" id="penalties-a-2min">0</td>
+                    <td class="team-b" id="penalties-b-2min">0</td>
+                    <td id="dr-2min">0</td>
+                    <td id="w-2min">0</td>
+                    <td id="d-2min">0</td>
+                    <td id="c-2min">0</td>
+                </tr>
+                <tr>
+                    <td colspan="14" style="text-align: left; font-weight: bold;">After penalty throws</td>
+                </tr>
+                <tr>
+                    <td>Total</td>
+                    <td id="total-goals">0:0</td>
+                    <td class="team-a" id="total-7m-a">0</td>
+                    <td class="team-b" id="total-7m-b">0</td>
+                    <td class="team-a" id="total-shots-a">0</td>
+                    <td class="team-b" id="total-shots-b">0</td>
+                    <td class="team-a" id="total-timeout-a">0</td>
+                    <td class="team-b" id="total-timeout-b">0</td>
+                    <td class="team-a" id="total-penalties-a">0</td>
+                    <td class="team-b" id="total-penalties-b">0</td>
+                    <td id="total-dr">0</td>
+                    <td id="total-w">0</td>
+                    <td id="total-d">0</td>
+                    <td id="total-c">0</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="match-info" style="margin-top: 10px;">
+            <div>
+                <strong>Referees:</strong> 
+                <span id="referee1">Referee 1</span>, 
+                <span id="referee2">Referee 2</span>
+            </div>
+            <div>
+                <strong>City:</strong> <span id="city">Unknown</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set match date
+            document.getElementById('match-date').textContent = new Date().toLocaleDateString();
+            
+            // Initialize statistics
+            const stats = {
+                A: {
+                    goals: 0,
+                    sevenM: 0,
+                    shots: 0,
+                    timeouts: 0,
+                    penalties: 0,
+                    dr: 0,
+                    w: 0,
+                    d: 0,
+                    c: 0,
+                    twoMin: {
+                        goals: 0,
+                        sevenM: 0,
+                        shots: 0,
+                        timeouts: 0,
+                        penalties: 0,
+                        dr: 0,
+                        w: 0,
+                        d: 0,
+                        c: 0
+                    }
+                },
+                B: {
+                    goals: 0,
+                    sevenM: 0,
+                    shots: 0,
+                    timeouts: 0,
+                    penalties: 0,
+                    dr: 0,
+                    w: 0,
+                    d: 0,
+                    c: 0,
+                    twoMin: {
+                        goals: 0,
+                        sevenM: 0,
+                        shots: 0,
+                        timeouts: 0,
+                        penalties: 0,
+                        dr: 0,
+                        w: 0,
+                        d: 0,
+                        c: 0
+                    }
+                }
+            };
+            
+            // Player statistics
+            const players = {
+                A: {},
+                B: {}
+            };
+            
+            // Initialize player rows (1-16 for each team)
+            for (let i = 1; i <= 16; i++) {
+                players.A[i] = { goals: 0, sevenM: 0, shots: 0 };
+                players.B[i] = { goals: 0, sevenM: 0, shots: 0 };
+            }
+            
+            // Initialize the stats tables
+            function initializeTables() {
+                const tbodyA = document.getElementById('stats-body-a');
+                const tbodyB = document.getElementById('stats-body-b');
+                tbodyA.innerHTML = '';
+                tbodyB.innerHTML = '';
+                
+                // Add rows for Team A players
+                for (let i = 1; i <= 16; i++) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${i}</td>
+                        <td id="goals-A-${i}">0</td>
+                        <td class="team-a" id="7m-A-${i}">0</td>
+                        <td class="team-a"></td>
+                        <td class="team-a" id="shots-A-${i}">0</td>
+                        <td class="team-a"></td>
+                        <td class="team-a"></td>
+                        <td class="team-a"></td>
+                        <td class="team-a"></td>
+                        <td class="team-a"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    `;
+                    tbodyA.appendChild(tr);
+                }
+                
+                // Add rows for Team B players
+                for (let i = 1; i <= 16; i++) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${i}</td>
+                        <td id="goals-B-${i}">0</td>
+                        <td class="team-b"></td>
+                        <td class="team-b" id="7m-B-${i}">0</td>
+                        <td class="team-b"></td>
+                        <td class="team-b" id="shots-B-${i}">0</td>
+                        <td class="team-b"></td>
+                        <td class="team-b"></td>
+                        <td class="team-b"></td>
+                        <td class="team-b"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    `;
+                    tbodyB.appendChild(tr);
+                }
+            }
+            
+            // Update the statistics display
+            function updateStats() {
+                // Update Team A player stats
+                for (let i = 1; i <= 16; i++) {
+                    document.getElementById(`goals-A-${i}`).textContent = players.A[i].goals;
+                    document.getElementById(`7m-A-${i}`).textContent = players.A[i].sevenM;
+                    document.getElementById(`shots-A-${i}`).textContent = players.A[i].shots;
+                }
+                
+                // Update Team B player stats
+                for (let i = 1; i <= 16; i++) {
+                    document.getElementById(`goals-B-${i}`).textContent = players.B[i].goals;
+                    document.getElementById(`7m-B-${i}`).textContent = players.B[i].sevenM;
+                    document.getElementById(`shots-B-${i}`).textContent = players.B[i].shots;
+                }
+                
+                // Update 2' row
+                document.getElementById('goals-2min').textContent = 
+                    `${stats.A.twoMin.goals}:${stats.B.twoMin.goals}`;
+                document.getElementById('7m-a-2min').textContent = stats.A.twoMin.sevenM;
+                document.getElementById('7m-b-2min').textContent = stats.B.twoMin.sevenM;
+                document.getElementById('shots-a-2min').textContent = stats.A.twoMin.shots;
+                document.getElementById('shots-b-2min').textContent = stats.B.twoMin.shots;
+                document.getElementById('timeout-a-2min').textContent = stats.A.twoMin.timeouts ? '1' : '';
+                document.getElementById('timeout-b-2min').textContent = stats.B.twoMin.timeouts ? '1' : '';
+                document.getElementById('penalties-a-2min').textContent = stats.A.twoMin.penalties;
+                document.getElementById('penalties-b-2min').textContent = stats.B.twoMin.penalties;
+                document.getElementById('dr-2min').textContent = stats.A.twoMin.dr + stats.B.twoMin.dr;
+                document.getElementById('w-2min').textContent = stats.A.twoMin.w + stats.B.twoMin.w;
+                document.getElementById('d-2min').textContent = stats.A.twoMin.d + stats.B.twoMin.d;
+                document.getElementById('c-2min').textContent = stats.A.twoMin.c + stats.B.twoMin.c;
+                
+                // Update totals
+                document.getElementById('total-goals').textContent = 
+                    `${stats.A.goals}:${stats.B.goals}`;
+                document.getElementById('total-7m-a').textContent = stats.A.sevenM;
+                document.getElementById('total-7m-b').textContent = stats.B.sevenM;
+                document.getElementById('total-shots-a').textContent = stats.A.shots;
+                document.getElementById('total-shots-b').textContent = stats.B.shots;
+                document.getElementById('total-timeout-a').textContent = stats.A.timeouts;
+                document.getElementById('total-timeout-b').textContent = stats.B.timeouts;
+                document.getElementById('total-penalties-a').textContent = stats.A.penalties;
+                document.getElementById('total-penalties-b').textContent = stats.B.penalties;
+                document.getElementById('total-dr').textContent = stats.A.dr + stats.B.dr;
+                document.getElementById('total-w').textContent = stats.A.w + stats.B.w;
+                document.getElementById('total-d').textContent = stats.A.d + stats.B.d;
+                document.getElementById('total-c').textContent = stats.A.c + stats.B.c;
+            }
+            
+            // Add an event
+            function addEvent(type, team, player) {
+                if (type === 'GOAL') {
+                    stats[team].goals++;
+                    stats[team].shots++;
+                    if (player) {
+                        players[team][player].goals++;
+                        players[team][player].shots++;
+                    }
+                    
+                    // Check if in 2' suspension period
+                    if (isTwoMinutePeriod()) {
+                        stats[team].twoMin.goals++;
+                        stats[team].twoMin.shots++;
+                    }
+                } 
+                else if (type === '7M') {
+                    stats[team].sevenM++;
+                    stats[team].goals++;
+                    stats[team].shots++;
+                    if (player) {
+                        players[team][player].sevenM++;
+                        players[team][player].goals++;
+                        players[team][player].shots++;
+                    }
+                    
+                    if (isTwoMinutePeriod()) {
+                        stats[team].twoMin.sevenM++;
+                        stats[team].twoMin.goals++;
+                        stats[team].twoMin.shots++;
+                    }
+                } 
+                else if (type === 'TIMEOUT') {
+                    stats[team].timeouts = 1; // Only one timeout per half
+                    
+                    if (isTwoMinutePeriod()) {
+                        stats[team].twoMin.timeouts = 1;
+                    }
+                } 
+                else if (type === 'PENALTY') {
+                    stats[team].penalties++;
+                    
+                    if (isTwoMinutePeriod()) {
+                        stats[team].twoMin.penalties++;
+                    }
+                }
+                
+                updateStats();
+            }
+            
+            // Check if we're in a 2-minute suspension period
+            function isTwoMinutePeriod() {
+                // This would be based on game time and rules
+                // For simplicity, we'll just return false here
+                return false;
+            }
+            
+            // Initialize game time
+            let seconds = 0;
+            setInterval(function() {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                document.getElementById('match-time').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }, 1000);
+            
+            // Set up event listener for adding events
+            document.getElementById('add-event').addEventListener('click', function() {
+                const type = document.getElementById('event-type').value;
+                const team = document.getElementById('event-team').value;
+                const player = parseInt(document.getElementById('event-player').value);
+                
+                if ((type === 'GOAL' || type === '7M') && (isNaN(player) || player < 1 || player > 16)) {
+                    alert('Please enter a valid player number (1-16)');
+                    return;
+                }
+                
+                addEvent(type, team, player);
+                document.getElementById('event-player').value = '';
+            });
+            
+            // Initialize the tables
+            initializeTables();
+            
+            // Add some sample data
+            setTimeout(() => {
+                addEvent('GOAL', 'A', 7);
+                addEvent('7M', 'B', 10);
+                addEvent('GOAL', 'A', 9);
+                addEvent('TIMEOUT', 'B');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
