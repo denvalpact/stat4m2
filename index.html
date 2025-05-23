@@ -81,15 +81,6 @@
         
         .stat-table td {
             cursor: pointer;
-            position: relative;
-        }
-        
-        .stat-cell {
-            transition: background-color 0.2s;
-        }
-        
-        .stat-cell:active {
-            background-color: #ddd;
         }
         
         .small-col {
@@ -116,15 +107,16 @@
             margin: 10px 0;
             padding: 5px;
             border: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        }
+        
+        select, input, button {
+            font-size: 10px;
+            padding: 3px;
+            margin-right: 5px;
         }
         
         button {
             cursor: pointer;
-            padding: 3px 6px;
-            font-size: 10px;
         }
         
         .team-title {
@@ -132,6 +124,17 @@
             text-align: center;
             margin: 10px 0;
             font-size: 12px;
+        }
+        
+        .player-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 2px;
+        }
+        
+        .player-controls button {
+            padding: 1px 3px;
+            font-size: 8px;
         }
         
         .active-period {
@@ -196,29 +199,36 @@
             font-weight: bold;
         }
         
+        .context-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
         .quick-actions {
             display: flex;
             gap: 5px;
         }
-        
+
         .quick-action-btn {
             padding: 2px 5px;
             font-size: 9px;
+            cursor: pointer;
+        }
+        .context-menu button {
+            display: block;
+            width: 100%;
+            padding: 5px 10px;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
         
-        .team-totals {
-            font-weight: bold;
-            margin-top: 5px;
-            text-align: center;
-        }
-        
-        .highlight {
-            animation: highlight 1s;
-        }
-        
-        @keyframes highlight {
-            0% { background-color: #ffff99; }
-            100% { background-color: transparent; }
+        .context-menu button:hover {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
@@ -258,17 +268,16 @@
         </div>
         
         <div class="controls">
-            <div>
-                <span id="game-time">
-                    <strong>Time:</strong> 
-                    <span id="match-time">00:00</span>
-                    <span id="current-period" class="active-period">1H</span>
-                </span>
-                <button id="toggle-suspension" class="suspension-active">2' Suspension Active</button>
-            </div>
+            <span id="game-time" style="margin-left: 20px;">
+            <strong>Time:</strong> 
+            <span id="match-time">00:00</span>
+            <span id="current-period" class="active-period">1H</span>
+            </span>
+            <button id="toggle-suspension" class="suspension-active">2' Suspension Active</button>
+            <!-- Add these buttons to the controls div (right after the suspension button) -->
             <div class="quick-actions">
-                <button id="undo-btn" class="quick-action-btn" title="Undo last action">↩ Undo</button>
-                <button id="redo-btn" class="quick-action-btn" title="Redo last action">↪ Redo</button>
+            <button id="undo-btn" class="quick-action-btn" title="Undo last action">↩ Undo</button>
+            <button id="redo-btn" class="quick-action-btn" title="Redo last action">↪ Redo</button>
             </div>
         </div>
         
@@ -297,7 +306,6 @@
                         <!-- Rows will be added dynamically -->
                     </tbody>
                 </table>
-                <div class="team-totals" id="team-a-totals">Total Goals: 0 | Assists: 0 | 2': 0</div>
             </div>
             
             <!-- Team B Column (Right) -->
@@ -323,7 +331,6 @@
                         <!-- Rows will be added dynamically -->
                     </tbody>
                 </table>
-                <div class="team-totals" id="team-b-totals">Total Goals: 0 | Assists: 0 | 2': 0</div>
             </div>
         </div>
         
@@ -339,6 +346,12 @@
         </div>
     </div>
 
+    <div class="context-menu" id="context-menu">
+        <button id="increment-btn">Increment (+1)</button>
+        <button id="decrement-btn">Decrement (-1)</button>
+        <button id="reset-btn">Reset (0)</button>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Sample player data (would be provided before match)
@@ -346,12 +359,38 @@
                 A: [
                     { id: 1, name: "Player A1", number: 7, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
                     { id: 2, name: "Player A2", number: 9, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    // ... more players ...
+                    { id: 3, name: "Player A3", number: 11, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 4, name: "Player A4", number: 12, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 5, name: "Player A5", number: 5, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 6, name: "Player A6", number: 8, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 7, name: "Player A7", number: 10, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 8, name: "Player A8", number: 13, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 9, name: "Player A9", number: 14, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 10, name: "Player A10", number: 15, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 11, name: "Player A11", number: 16, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 12, name: "Player A12", number: 17, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 13, name: "Player A13", number: 18, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 14, name: "Player A14", number: 19, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 15, name: "Player A15", number: 20, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 16, name: "Player A16", number: 21, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 }
                 ],
                 B: [
                     { id: 1, name: "Player B1", number: 1, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
                     { id: 2, name: "Player B2", number: 2, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    // ... more players ...
+                    { id: 3, name: "Player B3", number: 3, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 4, name: "Player B4", number: 4, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 5, name: "Player B5", number: 5, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 6, name: "Player B6", number: 6, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 7, name: "Player B7", number: 7, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 8, name: "Player B8", number: 8, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 9, name: "Player B9", number: 9, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 10, name: "Player B10", number: 10, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 11, name: "Player B11", number: 11, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 12, name: "Player B12", number: 12, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 13, name: "Player B13", number: 13, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 14, name: "Player B14", number: 14, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 15, name: "Player B15", number: 15, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
+                    { id: 16, name: "Player B16", number: 16, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 }
                 ]
             };
 
@@ -373,17 +412,19 @@
                 timeoutTimer: null
             };
 
-            // Undo/Redo functionality
-            let actionHistory = [];
-            let currentHistoryIndex = -1;
+            // Context menu state
+            let contextMenu = {
+                element: null,
+                currentCell: null,
+                currentPlayer: null,
+                currentStat: null
+            };
 
             // Initialize tables with player data
             function initializeTables() {
                 renderTeamTable('A');
                 renderTeamTable('B');
                 setupCellClickHandlers();
-                updateTeamTotals('A');
-                updateTeamTotals('B');
             }
 
             // Render team table
@@ -415,27 +456,47 @@
 
             // Setup click handlers for all stat cells
             function setupCellClickHandlers() {
+                // Initialize context menu
+                contextMenu.element = document.getElementById('context-menu');
+                document.getElementById('increment-btn').addEventListener('click', handleIncrement);
+                document.getElementById('decrement-btn').addEventListener('click', handleDecrement);
+                document.getElementById('reset-btn').addEventListener('click', handleReset);
+
+                // Close context menu when clicking elsewhere
+                document.addEventListener('click', (e) => {
+                    if (e.target.className !== 'stat-cell' && !contextMenu.element.contains(e.target)) {
+                        contextMenu.element.style.display = 'none';
+                    }
+                });
+
+                // Prevent default context menu
+                document.addEventListener('contextmenu', (e) => {
+                    if (e.target.className === 'stat-cell') {
+                        e.preventDefault();
+                    }
+                });
+
                 // Add click handlers to all stat cells
                 document.querySelectorAll('.stat-cell').forEach(cell => {
                     // Left click - increment
                     cell.addEventListener('click', (e) => {
                         if (e.button === 0) { // Left click only
-                            handleStatChange(cell, 1);
+                            handleCellClick(cell, 1);
                         }
                     });
 
-                    // Right click - decrement
+                    // Right click - context menu
                     cell.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
-                        handleStatChange(cell, -1);
+                        showContextMenu(cell, e);
                     });
 
-                    // Touch devices - long press for decrement
+                    // Touch devices - long press for context menu
                     let pressTimer;
                     cell.addEventListener('touchstart', (e) => {
                         pressTimer = setTimeout(() => {
-                            handleStatChange(cell, -1);
-                        }, 300); // 300ms for long press
+                            showContextMenu(cell, e);
+                        }, 500); // 500ms for long press
                     });
 
                     cell.addEventListener('touchend', (e) => {
@@ -448,175 +509,120 @@
                 });
             }
 
-            // Handle stat change (increment/decrement)
-            function handleStatChange(cell, change) {
+            // Handle cell click (increment)
+            function handleCellClick(cell, increment) {
                 const team = cell.getAttribute('data-team');
                 const playerId = parseInt(cell.getAttribute('data-player-id'));
                 const stat = cell.getAttribute('data-stat');
                 const player = players[team].find(p => p.id === playerId);
 
-                if (!player || (player.redCard && stat !== 'redCard')) return;
-
-                // Save current state for undo
-                saveStateBeforeChange();
+                if (!player || player.redCard) return; // Can't update stats for players with red cards
 
                 // Special handling for different stats
                 switch(stat) {
                     case 'twoMinutes':
-                        updateTwoMinutes(player, cell, change, team);
+                        const newTwoMinutes = player.twoMinutes + increment;
+                        if (newTwoMinutes >= 0 && newTwoMinutes <= 3) {
+                            player.twoMinutes = newTwoMinutes;
+                            cell.textContent = player.twoMinutes;
+                            
+                            // Check for red card (3 two-minute suspensions)
+                            if (player.twoMinutes >= 3) {
+                                player.redCard = true;
+                                document.querySelector(`[data-stat="redCard"][data-player-id="${playerId}"][data-team="${team}"]`).textContent = 'X';
+                                document.querySelector(`#stats-body-${team.toLowerCase()} tr:nth-child(${playerId})`).classList.add('red-card');
+                                alert(`Player ${player.name} (${player.number}) received a red card for 3 two-minute suspensions!`);
+                            }
+                        }
                         break;
                         
                     case 'yellowCards':
-                        updateYellowCards(player, cell, change);
+                        const newYellowCards = player.yellowCards + increment;
+                        if (newYellowCards >= 0 && newYellowCards <= 2) {
+                            player.yellowCards = newYellowCards;
+                            cell.textContent = player.yellowCards;
+                            cell.classList.toggle('yellow-card', player.yellowCards > 0);
+                            
+                            // Check if player already has 2 yellow cards
+                            if (player.yellowCards >= 2) {
+                                alert(`Player ${player.name} (${player.number}) has received 2 yellow cards!`);
+                            }
+                        }
                         break;
                         
                     case 'redCard':
-                        updateRedCard(player, cell, team, playerId);
+                        if (increment > 0) {
+                            player.redCard = !player.redCard;
+                            cell.textContent = player.redCard ? 'X' : '';
+                            document.querySelector(`#stats-body-${team.toLowerCase()} tr:nth-child(${playerId})`).classList.toggle('red-card', player.redCard);
+                        }
                         break;
                         
                     default:
-                        updateRegularStat(player, cell, stat, change);
+                        const newValue = player[stat] + increment;
+                        if (newValue >= 0) {
+                            player[stat] = newValue;
+                            cell.textContent = player[stat];
+                        }
                         break;
                 }
-
-                // Update team totals
-                updateTeamTotals(team);
-
-                // Highlight the changed cell
-                cell.classList.add('highlight');
-                setTimeout(() => {
-                    cell.classList.remove('highlight');
-                }, 1000);
             }
 
-            function updateTwoMinutes(player, cell, change, team) {
-                const newTwoMinutes = player.twoMinutes + change;
-                if (newTwoMinutes >= 0 && newTwoMinutes <= 3) {
-                    player.twoMinutes = newTwoMinutes;
-                    cell.textContent = player.twoMinutes;
-                    
-                    // Check for red card (3 two-minute suspensions)
-                    if (player.twoMinutes >= 3) {
-                        player.redCard = true;
-                        document.querySelector(`[data-stat="redCard"][data-player-id="${player.id}"][data-team="${team}"]`).textContent = 'X';
-                        document.querySelector(`#stats-body-${team.toLowerCase()} tr:nth-child(${player.id})`).classList.add('red-card');
-                        alert(`Player ${player.name} (${player.number}) received a red card for 3 two-minute suspensions!`);
-                    }
-                }
-            }
-
-            function updateYellowCards(player, cell, change) {
-                const newYellowCards = player.yellowCards + change;
-                if (newYellowCards >= 0 && newYellowCards <= 2) {
-                    player.yellowCards = newYellowCards;
-                    cell.textContent = player.yellowCards;
-                    cell.classList.toggle('yellow-card', player.yellowCards > 0);
-                    
-                    // Check if player already has 2 yellow cards
-                    if (player.yellowCards >= 2) {
-                        alert(`Player ${player.name} (${player.number}) has received 2 yellow cards!`);
-                    }
-                }
-            }
-
-            function updateRedCard(player, cell, team, playerId) {
-                player.redCard = !player.redCard;
-                cell.textContent = player.redCard ? 'X' : '';
-                document.querySelector(`#stats-body-${team.toLowerCase()} tr:nth-child(${playerId})`).classList.toggle('red-card', player.redCard);
-            }
-
-            function updateRegularStat(player, cell, stat, change) {
-                const newValue = player[stat] + change;
-                if (newValue >= 0) {
-                    player[stat] = newValue;
-                    cell.textContent = player[stat];
-                }
-            }
-
-            // Update team totals
-            function updateTeamTotals(team) {
-                const goals = players[team].reduce((sum, player) => sum + player.goals, 0);
-                const assists = players[team].reduce((sum, player) => sum + player.assists, 0);
-                const twoMinutes = players[team].reduce((sum, player) => sum + player.twoMinutes, 0);
-                
-                document.getElementById(`team-${team.toLowerCase()}-totals`).textContent = 
-                    `Total Goals: ${goals} | Assists: ${assists} | 2': ${twoMinutes}`;
-            }
-
-            // Save state before making changes (for undo)
-            function saveStateBeforeChange() {
-                // Truncate the history if we're not at the end
-                if (currentHistoryIndex < actionHistory.length - 1) {
-                    actionHistory = actionHistory.slice(0, currentHistoryIndex + 1);
-                }
-                
-                // Save current state
-                const state = {
-                    players: {
-                        A: JSON.parse(JSON.stringify(players.A)),
-                        B: JSON.parse(JSON.stringify(players.B))
-                    }
+            // Show context menu
+            function showContextMenu(cell, event) {
+                contextMenu.currentCell = cell;
+                contextMenu.currentPlayer = {
+                    team: cell.getAttribute('data-team'),
+                    id: parseInt(cell.getAttribute('data-player-id')),
+                    stat: cell.getAttribute('data-stat')
                 };
                 
-                actionHistory.push(state);
-                currentHistoryIndex = actionHistory.length - 1;
+                // Position the context menu
+                contextMenu.element.style.display = 'block';
+                contextMenu.element.style.left = `${event.clientX}px`;
+                contextMenu.element.style.top = `${event.clientY}px`;
                 
-                // Update undo/redo button states
-                updateUndoRedoButtons();
+                // Prevent default for touch events
+                if (event.type === 'touchstart') {
+                    event.preventDefault();
+                }
             }
 
-            // Undo last action
-            function undoAction() {
-                if (currentHistoryIndex <= 0) return;
-                
-                currentHistoryIndex--;
-                const state = actionHistory[currentHistoryIndex];
-                
-                // Restore player states
-                players.A = JSON.parse(JSON.stringify(state.players.A));
-                players.B = JSON.parse(JSON.stringify(state.players.B));
-                
-                // Re-render tables
-                renderTeamTable('A');
-                renderTeamTable('B');
-                setupCellClickHandlers();
-                
-                // Update totals
-                updateTeamTotals('A');
-                updateTeamTotals('B');
-                
-                // Update undo/redo button states
-                updateUndoRedoButtons();
+            // Handle increment from context menu
+            function handleIncrement() {
+                handleCellClick(contextMenu.currentCell, 1);
+                contextMenu.element.style.display = 'none';
             }
 
-            // Redo last undone action
-            function redoAction() {
-                if (currentHistoryIndex >= actionHistory.length - 1) return;
-                
-                currentHistoryIndex++;
-                const state = actionHistory[currentHistoryIndex];
-                
-                // Restore player states
-                players.A = JSON.parse(JSON.stringify(state.players.A));
-                players.B = JSON.parse(JSON.stringify(state.players.B));
-                
-                // Re-render tables
-                renderTeamTable('A');
-                renderTeamTable('B');
-                setupCellClickHandlers();
-                
-                // Update totals
-                updateTeamTotals('A');
-                updateTeamTotals('B');
-                
-                // Update undo/redo button states
-                updateUndoRedoButtons();
+            // Handle decrement from context menu
+            function handleDecrement() {
+                handleCellClick(contextMenu.currentCell, -1);
+                contextMenu.element.style.display = 'none';
             }
 
-            // Update undo/redo button states
-            function updateUndoRedoButtons() {
-                document.getElementById('undo-btn').disabled = currentHistoryIndex <= 0;
-                document.getElementById('redo-btn').disabled = currentHistoryIndex >= actionHistory.length - 1;
+            // Handle reset from context menu
+            function handleReset() {
+                const player = players[contextMenu.currentPlayer.team].find(p => p.id === contextMenu.currentPlayer.id);
+                const stat = contextMenu.currentPlayer.stat;
+                
+                if (player) {
+                    // Special cases
+                    if (stat === 'redCard') {
+                        player.redCard = false;
+                        contextMenu.currentCell.textContent = '';
+                        document.querySelector(`#stats-body-${contextMenu.currentPlayer.team.toLowerCase()} tr:nth-child(${contextMenu.currentPlayer.id})`).classList.remove('red-card');
+                    } else {
+                        player[stat] = 0;
+                        contextMenu.currentCell.textContent = '0';
+                        
+                        // Clear yellow card styling if resetting yellow cards
+                        if (stat === 'yellowCards') {
+                            contextMenu.currentCell.classList.remove('yellow-card');
+                        }
+                    }
+                }
+                
+                contextMenu.element.style.display = 'none';
             }
 
             // Call a timeout for a team
@@ -756,7 +762,7 @@
                 }, 1000);
             }
             
-            // Set up event listeners
+            // Set up event listener for toggling suspension
             document.getElementById('toggle-suspension').addEventListener('click', function() {
                 gameState.isTwoMinuteSuspension = !gameState.isTwoMinuteSuspension;
                 if (gameState.isTwoMinuteSuspension) {
@@ -768,6 +774,7 @@
                 updateSuspensionButton();
             });
             
+            // Set up event listeners for timeout buttons
             document.getElementById('timeout-button-a').addEventListener('click', function() {
                 callTimeout('A');
             });
@@ -776,15 +783,11 @@
                 callTimeout('B');
             });
             
-            document.getElementById('undo-btn').addEventListener('click', undoAction);
-            document.getElementById('redo-btn').addEventListener('click', redoAction);
-            
             // Initialize the tables and timer
             initializeTables();
             startTimer();
             updatePeriodHighlight();
             updateSuspensionButton();
-            updateUndoRedoButtons();
         });
     </script>
 </body>
