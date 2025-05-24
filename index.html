@@ -251,6 +251,60 @@
             color: #999;
             font-style: italic;
         }
+        
+        .time-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .time-config {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            background-color: #f5f5f5;
+        }
+        
+        .time-config label {
+            margin-right: 5px;
+        }
+        
+        .time-config input {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .officials-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        
+        .officials-table, .officials-table th, .officials-table td {
+            border: 1px solid black;
+        }
+        
+        .officials-table th, .officials-table td {
+            padding: 3px;
+            text-align: center;
+        }
+        
+        .editable-referee {
+            cursor: pointer;
+            border-bottom: 1px dashed #999;
+        }
+        
+        .period-score {
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .suspension-timer {
+            font-size: 8px;
+            color: #d32f2f;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -263,6 +317,16 @@
                 <div><strong>Date:</strong> <span id="match-date">2023-11-15</span></div>
             </div>
             <div><strong>Match No.:</strong> <span id="match-number">10765</span></div>
+        </div>
+        
+        <!-- Time Configuration -->
+        <div class="time-config">
+            <strong>Match Duration:</strong>
+            <label>1H: <input type="number" id="period-1h-duration" min="1" value="30"> min</label>
+            <label>2H: <input type="number" id="period-2h-duration" min="1" value="30"> min</label>
+            <label>ET1: <input type="number" id="period-et1-duration" min="1" value="5"> min</label>
+            <label>ET2: <input type="number" id="period-et2-duration" min="1" value="5"> min</label>
+            <button id="apply-time-config">Apply</button>
         </div>
         
         <!-- Timeout Controls -->
@@ -282,23 +346,24 @@
         </div>
         
         <div class="time-markers">
-            <div id="period-1H">Half-time(30')</div>
-            <div id="period-2H">End of 60'</div>
-            <div id="period-ET1">1st extra time</div>
-            <div id="period-ET2">2nd extra time</div>
+            <div id="period-1H">1st Half (<span class="period-duration">30</span>') <span class="period-score" id="period-1h-score"></span></div>
+            <div id="period-2H">2nd Half (<span class="period-duration">30</span>') <span class="period-score" id="period-2h-score"></span></div>
+            <div id="period-ET1">1st Extra Time (<span class="period-duration">5</span>') <span class="period-score" id="period-et1-score"></span></div>
+            <div id="period-ET2">2nd Extra Time (<span class="period-duration">5</span>') <span class="period-score" id="period-et2-score"></span></div>
         </div>
         
         <div class="controls">
-            <span id="game-time" style="margin-left: 20px;">
-            <strong>Time:</strong> 
-            <span id="match-time">00:00</span>
-            <span id="current-period" class="active-period">1H</span>
-            </span>
+            <div class="time-controls">
+                <strong>Time:</strong> 
+                <span id="match-time">00:00</span>
+                <span id="current-period" class="active-period">1H</span>
+                <button id="pause-btn">⏸ Pause</button>
+                <button id="reset-time-btn">↻ Reset Time</button>
+            </div>
             <button id="toggle-suspension" class="suspension-active">2' Suspension Active</button>
-            <!-- Add these buttons to the controls div (right after the suspension button) -->
             <div class="quick-actions">
-            <button id="undo-btn" class="quick-action-btn" title="Undo last action">↩ Undo</button>
-            <button id="redo-btn" class="quick-action-btn" title="Redo last action">↪ Redo</button>
+                <button id="undo-btn" class="quick-action-btn" title="Undo last action">↩ Undo</button>
+                <button id="redo-btn" class="quick-action-btn" title="Redo last action">↪ Redo</button>
             </div>
         </div>
         
@@ -337,6 +402,37 @@
                         <!-- Rows will be added dynamically -->
                     </tbody>
                 </table>
+                
+                <!-- Team Officials for Team A -->
+                <table class="officials-table">
+                    <thead>
+                        <tr>
+                            <th colspan="3">Team A Officials</th>
+                        </tr>
+                        <tr>
+                            <th>Role</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="officials-body-a">
+                        <tr>
+                            <td>Head Coach</td>
+                            <td class="official-name" contenteditable="true">Coach A1</td>
+                            <td><button class="remove-official" data-team="A" data-index="0">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>Assistant Coach</td>
+                            <td class="official-name" contenteditable="true">Coach A2</td>
+                            <td><button class="remove-official" data-team="A" data-index="1">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>Team Manager</td>
+                            <td class="official-name" contenteditable="true">Manager A</td>
+                            <td><button class="remove-official" data-team="A" data-index="2">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             
             <!-- Team B Column (Right) -->
@@ -372,14 +468,45 @@
                         <!-- Rows will be added dynamically -->
                     </tbody>
                 </table>
+                
+                <!-- Team Officials for Team B -->
+                <table class="officials-table">
+                    <thead>
+                        <tr>
+                            <th colspan="3">Team B Officials</th>
+                        </tr>
+                        <tr>
+                            <th>Role</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="officials-body-b">
+                        <tr>
+                            <td>Head Coach</td>
+                            <td class="official-name" contenteditable="true">Coach B1</td>
+                            <td><button class="remove-official" data-team="B" data-index="0">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>Assistant Coach</td>
+                            <td class="official-name" contenteditable="true">Coach B2</td>
+                            <td><button class="remove-official" data-team="B" data-index="1">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>Team Manager</td>
+                            <td class="official-name" contenteditable="true">Manager B</td>
+                            <td><button class="remove-official" data-team="B" data-index="2">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         
         <div class="match-info" style="margin-top: 10px;">
             <div>
                 <strong>Referees:</strong> 
-                <span id="referee1">John Smith</span>, 
-                <span id="referee2">Michael Johnson</span>
+                <span id="referee1" class="editable-referee">John Smith</span>, 
+                <span id="referee2" class="editable-referee">Michael Johnson</span>
             </div>
             <div>
                 <strong>City:</strong> <span id="city">Berlin</span>
@@ -410,7 +537,9 @@
                     steals: 0,
                     blocks: 0,
                     turnovers: 0,
-                    isEmpty: true
+                    isEmpty: true,
+                    suspensionEndTime: 0,
+                    isSuspended: false
                 })),
                 B: Array(16).fill().map((_, index) => ({
                     id: index + 1,
@@ -425,7 +554,9 @@
                     steals: 0,
                     blocks: 0,
                     turnovers: 0,
-                    isEmpty: true
+                    isEmpty: true,
+                    suspensionEndTime: 0,
+                    isSuspended: false
                 }))
             };
 
@@ -444,7 +575,22 @@
                 timeoutTeam: null,
                 timeoutStartTime: 0,
                 timeoutEndTime: 0,
-                timeoutTimer: null
+                timeoutTimer: null,
+                isPaused: false,
+                timerInterval: null,
+                periodDurations: {
+                    '1H': 30 * 60, // 30 minutes in seconds
+                    '2H': 30 * 60,
+                    'ET1': 5 * 60,
+                    'ET2': 5 * 60
+                },
+                periodScores: {
+                    '1H': { A: 0, B: 0 },
+                    '2H': { A: 0, B: 0 },
+                    'ET1': { A: 0, B: 0 },
+                    'ET2': { A: 0, B: 0 }
+                },
+                totalScores: { A: 0, B: 0 }
             };
 
             // Context menu state
@@ -460,6 +606,8 @@
                 renderTeamTable('A');
                 renderTeamTable('B');
                 setupCellClickHandlers();
+                setupEditableReferees();
+                setupOfficialControls();
             }
 
             // Render team table
@@ -480,6 +628,10 @@
                             <td colspan="11">Empty slot - add player</td>
                         `;
                     } else {
+                        // Add suspension timer if player is suspended
+                        const suspensionTimer = player.isSuspended ? 
+                            `<div class="suspension-timer">(${formatTime(player.suspensionEndTime - gameState.seconds)})</div>` : '';
+                        
                         tr.innerHTML = `
                             <td>${index + 1}</td>
                             <td>${player.name}</td>
@@ -487,7 +639,7 @@
                             <td class="stat-cell" data-stat="goals" data-player-id="${player.id}" data-team="${team}">${player.goals}</td>
                             <td class="stat-cell" data-stat="assists" data-player-id="${player.id}" data-team="${team}">${player.assists}</td>
                             <td class="stat-cell" data-stat="saves" data-player-id="${player.id}" data-team="${team}">${player.saves}</td>
-                            <td class="stat-cell" data-stat="twoMinutes" data-player-id="${player.id}" data-team="${team}">${player.twoMinutes}</td>
+                            <td class="stat-cell" data-stat="twoMinutes" data-player-id="${player.id}" data-team="${team}">${player.twoMinutes}${suspensionTimer}</td>
                             <td class="stat-cell" data-stat="yellowCards" data-player-id="${player.id}" data-team="${team}" ${player.yellowCards > 0 ? 'class="yellow-card"' : ''}>${player.yellowCards}</td>
                             <td class="stat-cell" data-stat="redCard" data-player-id="${player.id}" data-team="${team}">${player.redCard ? 'X' : ''}</td>
                             <td class="stat-cell" data-stat="steals" data-player-id="${player.id}" data-team="${team}">${player.steals}</td>
@@ -497,6 +649,13 @@
                     }
                     tbody.appendChild(tr);
                 });
+            }
+
+            // Format time as MM:SS
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
             }
 
             // Add a player to a team
@@ -604,15 +763,24 @@
                         const newTwoMinutes = player.twoMinutes + increment;
                         if (newTwoMinutes >= 0 && newTwoMinutes <= 3) {
                             player.twoMinutes = newTwoMinutes;
-                            cell.textContent = player.twoMinutes;
+                            
+                            // If giving a 2-minute suspension
+                            if (increment > 0) {
+                                player.isSuspended = true;
+                                player.suspensionEndTime = gameState.seconds + 120; // 2 minutes
+                            }
                             
                             // Check for red card (3 two-minute suspensions)
                             if (player.twoMinutes >= 3) {
                                 player.redCard = true;
+                                player.isSuspended = false;
                                 document.querySelector(`[data-stat="redCard"][data-player-id="${playerId}"][data-team="${team}"]`).textContent = 'X';
                                 document.querySelector(`#stats-body-${team.toLowerCase()} tr:nth-child(${playerId})`).classList.add('red-card');
                                 alert(`Player ${player.name} (${player.number}) received a red card for 3 two-minute suspensions!`);
                             }
+                            
+                            renderTeamTable(team);
+                            setupCellClickHandlers();
                         }
                         break;
                         
@@ -633,6 +801,7 @@
                     case 'redCard':
                         if (increment > 0) {
                             player.redCard = !player.redCard;
+                            player.isSuspended = false;
                             cell.textContent = player.redCard ? 'X' : '';
                             document.querySelector(`#stats-body-${team.toLowerCase()} tr:nth-child(${playerId})`).classList.toggle('red-card', player.redCard);
                         }
@@ -641,10 +810,39 @@
                     default:
                         const newValue = player[stat] + increment;
                         if (newValue >= 0) {
+                            // Update the score if it's a goal
+                            if (stat === 'goals') {
+                                updateScores(team, increment);
+                            }
+                            
                             player[stat] = newValue;
                             cell.textContent = player[stat];
                         }
                         break;
+                }
+            }
+
+            // Update scores when a goal is scored
+            function updateScores(team, increment) {
+                gameState.totalScores[team] += increment;
+                
+                // Update the current period score
+                if (gameState.period in gameState.periodScores) {
+                    gameState.periodScores[gameState.period][team] += increment;
+                }
+                
+                // Update the score display for completed periods
+                updatePeriodScoresDisplay();
+            }
+
+            // Update the displayed scores for each period
+            function updatePeriodScoresDisplay() {
+                for (const period in gameState.periodScores) {
+                    const scoreElement = document.getElementById(`period-${period.toLowerCase()}-score`);
+                    if (scoreElement) {
+                        const scores = gameState.periodScores[period];
+                        scoreElement.textContent = `${scores.A} / ${scores.B}`;
+                    }
                 }
             }
 
@@ -691,7 +889,17 @@
                         player.redCard = false;
                         contextMenu.currentCell.textContent = '';
                         document.querySelector(`#stats-body-${contextMenu.currentPlayer.team.toLowerCase()} tr:nth-child(${contextMenu.currentPlayer.id})`).classList.remove('red-card');
+                    } else if (stat === 'twoMinutes') {
+                        player.twoMinutes = 0;
+                        player.isSuspended = false;
+                        renderTeamTable(contextMenu.currentPlayer.team);
+                        setupCellClickHandlers();
                     } else {
+                        // If it's a goal stat, update the scores
+                        if (stat === 'goals' && player[stat] > 0) {
+                            updateScores(contextMenu.currentPlayer.team, -player[stat]);
+                        }
+                        
                         player[stat] = 0;
                         contextMenu.currentCell.textContent = '0';
                         
@@ -715,6 +923,11 @@
                 if (gameState.isTimeoutActive) {
                     alert('A timeout is already active!');
                     return;
+                }
+
+                // Pause the game
+                if (!gameState.isPaused) {
+                    togglePause();
                 }
 
                 // Start the timeout
@@ -774,13 +987,22 @@
                     document.getElementById(`timeout-button-B`).classList.add('timeout-disabled');
                 }
 
+                // Resume the game if it was paused for the timeout
+                if (gameState.isPaused) {
+                    togglePause();
+                }
+
                 alert(`Timeout for Team ${gameState.timeoutTeam} has ended. Game resumes.`);
                 gameState.timeoutTeam = null;
             }
 
             // Update game time display
             function updateTimeDisplay() {
-                const periodSeconds = gameState.seconds % 1800; // 30 minutes per period
+                if (gameState.isPaused) return;
+
+                gameState.seconds++;
+                
+                const periodSeconds = getPeriodSeconds();
                 const minutes = Math.floor(periodSeconds / 60);
                 const seconds = periodSeconds % 60;
                 
@@ -788,29 +1010,72 @@
                     `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                 
                 // Update period based on time
-                if (gameState.seconds < 1800) {
-                    gameState.period = '1H';
-                } else if (gameState.seconds < 3600) {
-                    gameState.period = '2H';
-                } else if (gameState.seconds < 3900) {
-                    gameState.period = 'ET1';
-                } else {
-                    gameState.period = 'ET2';
-                }
+                updatePeriod();
                 
-                updatePeriodHighlight();
-                
-                // Check if 2-minute suspension has ended
-                if (gameState.isTwoMinuteSuspension && gameState.seconds >= gameState.suspensionEndTime) {
-                    gameState.isTwoMinuteSuspension = false;
-                    gameState.suspensionTeam = null;
-                    updateSuspensionButton();
-                }
+                // Check for ended suspensions
+                checkSuspensions();
                 
                 // Update timeout timer if active
                 if (gameState.isTimeoutActive) {
                     updateTimeoutTimer();
                 }
+            }
+            
+            // Check for ended suspensions
+            function checkSuspensions() {
+                for (const team of ['A', 'B']) {
+                    for (const player of players[team]) {
+                        if (player.isSuspended && gameState.seconds >= player.suspensionEndTime) {
+                            player.isSuspended = false;
+                            renderTeamTable(team);
+                            setupCellClickHandlers();
+                        }
+                    }
+                }
+            }
+            
+            // Get seconds in current period
+            function getPeriodSeconds() {
+                let periodStart = 0;
+                
+                if (gameState.period === '2H') {
+                    periodStart = gameState.periodDurations['1H'];
+                } else if (gameState.period === 'ET1') {
+                    periodStart = gameState.periodDurations['1H'] + gameState.periodDurations['2H'];
+                } else if (gameState.period === 'ET2') {
+                    periodStart = gameState.periodDurations['1H'] + gameState.periodDurations['2H'] + gameState.periodDurations['ET1'];
+                }
+                
+                return gameState.seconds - periodStart;
+            }
+            
+            // Update current period
+            function updatePeriod() {
+                const prevPeriod = gameState.period;
+                
+                if (gameState.seconds < gameState.periodDurations['1H']) {
+                    gameState.period = '1H';
+                } else if (gameState.seconds < gameState.periodDurations['1H'] + gameState.periodDurations['2H']) {
+                    gameState.period = '2H';
+                    // If we just transitioned to 2H, record 1H scores
+                    if (prevPeriod === '1H') {
+                        updatePeriodScoresDisplay();
+                    }
+                } else if (gameState.seconds < gameState.periodDurations['1H'] + gameState.periodDurations['2H'] + gameState.periodDurations['ET1']) {
+                    gameState.period = 'ET1';
+                    // If we just transitioned to ET1, record 2H scores
+                    if (prevPeriod === '2H') {
+                        updatePeriodScoresDisplay();
+                    }
+                } else {
+                    gameState.period = 'ET2';
+                    // If we just transitioned to ET2, record ET1 scores
+                    if (prevPeriod === 'ET1') {
+                        updatePeriodScoresDisplay();
+                    }
+                }
+                
+                updatePeriodHighlight();
             }
             
             // Highlight current period
@@ -836,47 +1101,162 @@
             
             // Initialize game timer
             function startTimer() {
-                setInterval(function() {
-                    gameState.seconds++;
-                    updateTimeDisplay();
-                }, 1000);
+                if (gameState.timerInterval) {
+                    clearInterval(gameState.timerInterval);
+                }
+                
+                gameState.timerInterval = setInterval(updateTimeDisplay, 1000);
             }
             
-            // Set up event listener for toggling suspension
-            document.getElementById('toggle-suspension').addEventListener('click', function() {
-                gameState.isTwoMinuteSuspension = !gameState.isTwoMinuteSuspension;
-                if (gameState.isTwoMinuteSuspension) {
-                    gameState.suspensionTeam = 'A'; // Default to Team A, can be changed
-                    gameState.suspensionEndTime = gameState.seconds + 120; // 2 minutes
+            // Pause or resume the game
+            function togglePause() {
+                gameState.isPaused = !gameState.isPaused;
+                const pauseBtn = document.getElementById('pause-btn');
+                
+                if (gameState.isPaused) {
+                    pauseBtn.textContent = '▶ Resume';
+                    if (gameState.timerInterval) {
+                        clearInterval(gameState.timerInterval);
+                    }
                 } else {
-                    gameState.suspensionTeam = null;
+                    pauseBtn.textContent = '⏸ Pause';
+                    startTimer();
                 }
+            }
+            
+            // Reset game time
+            function resetTime() {
+                if (confirm('Are you sure you want to reset the game time to 00:00?')) {
+                    gameState.seconds = 0;
+                    gameState.period = '1H';
+                    gameState.periodScores = {
+                        '1H': { A: 0, B: 0 },
+                        '2H': { A: 0, B: 0 },
+                        'ET1': { A: 0, B: 0 },
+                        'ET2': { A: 0, B: 0 }
+                    };
+                    gameState.totalScores = { A: 0, B: 0 };
+                    
+                    // Clear period scores display
+                    document.querySelectorAll('.period-score').forEach(el => {
+                        el.textContent = '';
+                    });
+                    
+                    // Reset all player suspensions
+                    for (const team of ['A', 'B']) {
+                        for (const player of players[team]) {
+                            player.isSuspended = false;
+                        }
+                        renderTeamTable(team);
+                    }
+                    
+                    updateTimeDisplay();
+                }
+            }
+            
+            // Apply time configuration
+            function applyTimeConfig() {
+                const period1H = parseInt(document.getElementById('period-1h-duration').value) || 30;
+                const period2H = parseInt(document.getElementById('period-2h-duration').value) || 30;
+                const periodET1 = parseInt(document.getElementById('period-et1-duration').value) || 5;
+                const periodET2 = parseInt(document.getElementById('period-et2-duration').value) || 5;
+                
+                gameState.periodDurations = {
+                    '1H': period1H * 60,
+                    '2H': period2H * 60,
+                    'ET1': periodET1 * 60,
+                    'ET2': periodET2 * 60
+                };
+                
+                // Update the displayed period durations
+                document.querySelectorAll('.period-duration').forEach((el, index) => {
+                    const durations = [period1H, period2H, periodET1, periodET2];
+                    el.textContent = durations[index];
+                });
+                
+                alert(`Time configuration updated:\n1H: ${period1H} min\n2H: ${period2H} min\nET1: ${periodET1} min\nET2: ${periodET2} min`);
+            }
+            
+            // Setup editable referees
+            function setupEditableReferees() {
+                document.getElementById('referee1').addEventListener('input', function() {
+                    // You could save this to gameState if needed
+                });
+                
+                document.getElementById('referee2').addEventListener('input', function() {
+                    // You could save this to gameState if needed
+                });
+            }
+            
+            // Setup official controls
+            function setupOfficialControls() {
+                document.querySelectorAll('.remove-official').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const team = this.getAttribute('data-team');
+                        const index = parseInt(this.getAttribute('data-index'));
+                        const nameCell = this.closest('tr').querySelector('.official-name');
+                        
+                        if (confirm(`Remove ${nameCell.textContent} from Team ${team} officials?`)) {
+                            nameCell.textContent = '';
+                        }
+                    });
+                });
+            }
+            
+            // Set up event listeners
+            function setupEventListeners() {
+                // Toggle suspension
+                document.getElementById('toggle-suspension').addEventListener('click', function() {
+                    gameState.isTwoMinuteSuspension = !gameState.isTwoMinuteSuspension;
+                    if (gameState.isTwoMinuteSuspension) {
+                        gameState.suspensionTeam = 'A'; // Default to Team A, can be changed
+                        gameState.suspensionEndTime = gameState.seconds + 120; // 2 minutes
+                    } else {
+                        gameState.suspensionTeam = null;
+                    }
+                    updateSuspensionButton();
+                });
+                
+                // Timeout buttons
+                document.getElementById('timeout-button-a').addEventListener('click', function() {
+                    callTimeout('A');
+                });
+                
+                document.getElementById('timeout-button-b').addEventListener('click', function() {
+                    callTimeout('B');
+                });
+                
+                // Add players
+                document.getElementById('add-player-a').addEventListener('click', function() {
+                    addPlayer('A');
+                });
+                
+                document.getElementById('add-player-b').addEventListener('click', function() {
+                    addPlayer('B');
+                });
+                
+                // Pause button
+                document.getElementById('pause-btn').addEventListener('click', togglePause);
+                
+                // Reset time button
+                document.getElementById('reset-time-btn').addEventListener('click', resetTime);
+                
+                // Apply time configuration
+                document.getElementById('apply-time-config').addEventListener('click', applyTimeConfig);
+            }
+            
+            // Initialize the application
+            function initialize() {
+                initializeTables();
+                setupEventListeners();
+                startTimer();
+                updatePeriodHighlight();
                 updateSuspensionButton();
-            });
+                applyTimeConfig(); // Apply default time configuration
+            }
             
-            // Set up event listeners for timeout buttons
-            document.getElementById('timeout-button-a').addEventListener('click', function() {
-                callTimeout('A');
-            });
-            
-            document.getElementById('timeout-button-b').addEventListener('click', function() {
-                callTimeout('B');
-            });
-            
-            // Set up event listeners for adding players
-            document.getElementById('add-player-a').addEventListener('click', function() {
-                addPlayer('A');
-            });
-            
-            document.getElementById('add-player-b').addEventListener('click', function() {
-                addPlayer('B');
-            });
-            
-            // Initialize the tables and timer
-            initializeTables();
-            startTimer();
-            updatePeriodHighlight();
-            updateSuspensionButton();
+            // Start the application
+            initialize();
         });
     </script>
 </body>
