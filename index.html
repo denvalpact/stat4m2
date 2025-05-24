@@ -230,6 +230,27 @@
         .context-menu button:hover {
             background-color: #f0f0f0;
         }
+        
+        .add-player-form {
+            margin-top: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        
+        .add-player-form input {
+            margin-right: 5px;
+            width: 60px;
+        }
+        
+        .add-player-form button {
+            padding: 3px 5px;
+        }
+        
+        .empty-player {
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -286,6 +307,15 @@
             <!-- Team A Column (Left) -->
             <div class="team-column team-a-column">
                 <div class="team-title">TEAM A</div>
+                
+                <!-- Add Player Form for Team A -->
+                <div class="add-player-form">
+                    <strong>Add Player:</strong>
+                    <input type="text" id="player-name-a" placeholder="Name">
+                    <input type="number" id="player-number-a" placeholder="Number" min="1" max="99">
+                    <button id="add-player-a">Add to Team A</button>
+                </div>
+                
                 <table class="stat-table" id="stats-table-a">
                     <thead>
                         <tr>
@@ -294,6 +324,7 @@
                             <th class="small-col">Shirt</th>
                             <th class="small-col">Goals</th>
                             <th class="small-col">Assists</th>
+                            <th class="small-col">Saves</th>
                             <th class="small-col">2'</th>
                             <th class="small-col">Yellow</th>
                             <th class="small-col">Red</th>
@@ -311,6 +342,15 @@
             <!-- Team B Column (Right) -->
             <div class="team-column team-b-column">
                 <div class="team-title">TEAM B</div>
+                
+                <!-- Add Player Form for Team B -->
+                <div class="add-player-form">
+                    <strong>Add Player:</strong>
+                    <input type="text" id="player-name-b" placeholder="Name">
+                    <input type="number" id="player-number-b" placeholder="Number" min="1" max="99">
+                    <button id="add-player-b">Add to Team B</button>
+                </div>
+                
                 <table class="stat-table" id="stats-table-b">
                     <thead>
                         <tr>
@@ -319,6 +359,7 @@
                             <th class="small-col">Shirt</th>
                             <th class="small-col">Goals</th>
                             <th class="small-col">Assists</th>
+                            <th class="small-col">Saves</th>
                             <th class="small-col">2'</th>
                             <th class="small-col">Yellow</th>
                             <th class="small-col">Red</th>
@@ -354,44 +395,38 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sample player data (would be provided before match)
+            // Initialize empty player data
             const players = {
-                A: [
-                    { id: 1, name: "Player A1", number: 7, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 2, name: "Player A2", number: 9, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 3, name: "Player A3", number: 11, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 4, name: "Player A4", number: 12, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 5, name: "Player A5", number: 5, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 6, name: "Player A6", number: 8, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 7, name: "Player A7", number: 10, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 8, name: "Player A8", number: 13, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 9, name: "Player A9", number: 14, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 10, name: "Player A10", number: 15, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 11, name: "Player A11", number: 16, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 12, name: "Player A12", number: 17, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 13, name: "Player A13", number: 18, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 14, name: "Player A14", number: 19, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 15, name: "Player A15", number: 20, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 16, name: "Player A16", number: 21, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 }
-                ],
-                B: [
-                    { id: 1, name: "Player B1", number: 1, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 2, name: "Player B2", number: 2, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 3, name: "Player B3", number: 3, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 4, name: "Player B4", number: 4, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 5, name: "Player B5", number: 5, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 6, name: "Player B6", number: 6, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 7, name: "Player B7", number: 7, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 8, name: "Player B8", number: 8, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 9, name: "Player B9", number: 9, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 10, name: "Player B10", number: 10, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 11, name: "Player B11", number: 11, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 12, name: "Player B12", number: 12, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 13, name: "Player B13", number: 13, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 14, name: "Player B14", number: 14, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 15, name: "Player B15", number: 15, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 },
-                    { id: 16, name: "Player B16", number: 16, goals: 0, assists: 0, twoMinutes: 0, yellowCards: 0, redCard: false, steals: 0, blocks: 0, turnovers: 0 }
-                ]
+                A: Array(16).fill().map((_, index) => ({
+                    id: index + 1,
+                    name: "",
+                    number: "",
+                    goals: 0,
+                    assists: 0,
+                    saves: 0,
+                    twoMinutes: 0,
+                    yellowCards: 0,
+                    redCard: false,
+                    steals: 0,
+                    blocks: 0,
+                    turnovers: 0,
+                    isEmpty: true
+                })),
+                B: Array(16).fill().map((_, index) => ({
+                    id: index + 1,
+                    name: "",
+                    number: "",
+                    goals: 0,
+                    assists: 0,
+                    saves: 0,
+                    twoMinutes: 0,
+                    yellowCards: 0,
+                    redCard: false,
+                    steals: 0,
+                    blocks: 0,
+                    turnovers: 0,
+                    isEmpty: true
+                }))
             };
 
             // Game state
@@ -420,7 +455,7 @@
                 currentStat: null
             };
 
-            // Initialize tables with player data
+            // Initialize tables with empty player data
             function initializeTables() {
                 renderTeamTable('A');
                 renderTeamTable('B');
@@ -437,21 +472,66 @@
                     if (player.redCard) {
                         tr.classList.add('red-card');
                     }
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${player.name}</td>
-                        <td>${player.number}</td>
-                        <td class="stat-cell" data-stat="goals" data-player-id="${player.id}" data-team="${team}">${player.goals}</td>
-                        <td class="stat-cell" data-stat="assists" data-player-id="${player.id}" data-team="${team}">${player.assists}</td>
-                        <td class="stat-cell" data-stat="twoMinutes" data-player-id="${player.id}" data-team="${team}">${player.twoMinutes}</td>
-                        <td class="stat-cell" data-stat="yellowCards" data-player-id="${player.id}" data-team="${team}" ${player.yellowCards > 0 ? 'class="yellow-card"' : ''}>${player.yellowCards}</td>
-                        <td class="stat-cell" data-stat="redCard" data-player-id="${player.id}" data-team="${team}">${player.redCard ? 'X' : ''}</td>
-                        <td class="stat-cell" data-stat="steals" data-player-id="${player.id}" data-team="${team}">${player.steals}</td>
-                        <td class="stat-cell" data-stat="blocks" data-player-id="${player.id}" data-team="${team}">${player.blocks}</td>
-                        <td class="stat-cell" data-stat="turnovers" data-player-id="${player.id}" data-team="${team}">${player.turnovers}</td>
-                    `;
+                    
+                    if (player.isEmpty) {
+                        tr.classList.add('empty-player');
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td colspan="11">Empty slot - add player</td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${player.name}</td>
+                            <td>${player.number}</td>
+                            <td class="stat-cell" data-stat="goals" data-player-id="${player.id}" data-team="${team}">${player.goals}</td>
+                            <td class="stat-cell" data-stat="assists" data-player-id="${player.id}" data-team="${team}">${player.assists}</td>
+                            <td class="stat-cell" data-stat="saves" data-player-id="${player.id}" data-team="${team}">${player.saves}</td>
+                            <td class="stat-cell" data-stat="twoMinutes" data-player-id="${player.id}" data-team="${team}">${player.twoMinutes}</td>
+                            <td class="stat-cell" data-stat="yellowCards" data-player-id="${player.id}" data-team="${team}" ${player.yellowCards > 0 ? 'class="yellow-card"' : ''}>${player.yellowCards}</td>
+                            <td class="stat-cell" data-stat="redCard" data-player-id="${player.id}" data-team="${team}">${player.redCard ? 'X' : ''}</td>
+                            <td class="stat-cell" data-stat="steals" data-player-id="${player.id}" data-team="${team}">${player.steals}</td>
+                            <td class="stat-cell" data-stat="blocks" data-player-id="${player.id}" data-team="${team}">${player.blocks}</td>
+                            <td class="stat-cell" data-stat="turnovers" data-player-id="${player.id}" data-team="${team}">${player.turnovers}</td>
+                        `;
+                    }
                     tbody.appendChild(tr);
                 });
+            }
+
+            // Add a player to a team
+            function addPlayer(team) {
+                const nameInput = document.getElementById(`player-name-${team.toLowerCase()}`);
+                const numberInput = document.getElementById(`player-number-${team.toLowerCase()}`);
+                
+                const name = nameInput.value.trim();
+                const number = numberInput.value.trim();
+                
+                if (!name || !number) {
+                    alert('Please enter both name and number for the player');
+                    return;
+                }
+                
+                // Find first empty slot
+                const emptySlot = players[team].find(player => player.isEmpty);
+                
+                if (!emptySlot) {
+                    alert('No empty slots available. Maximum 16 players per team.');
+                    return;
+                }
+                
+                // Update player data
+                emptySlot.name = name;
+                emptySlot.number = number;
+                emptySlot.isEmpty = false;
+                
+                // Clear inputs
+                nameInput.value = '';
+                numberInput.value = '';
+                
+                // Re-render table
+                renderTeamTable(team);
+                setupCellClickHandlers();
             }
 
             // Setup click handlers for all stat cells
@@ -516,7 +596,7 @@
                 const stat = cell.getAttribute('data-stat');
                 const player = players[team].find(p => p.id === playerId);
 
-                if (!player || player.redCard) return; // Can't update stats for players with red cards
+                if (!player || player.redCard || player.isEmpty) return; // Can't update stats for empty slots or players with red cards
 
                 // Special handling for different stats
                 switch(stat) {
@@ -605,7 +685,7 @@
                 const player = players[contextMenu.currentPlayer.team].find(p => p.id === contextMenu.currentPlayer.id);
                 const stat = contextMenu.currentPlayer.stat;
                 
-                if (player) {
+                if (player && !player.isEmpty) {
                     // Special cases
                     if (stat === 'redCard') {
                         player.redCard = false;
@@ -781,6 +861,15 @@
             
             document.getElementById('timeout-button-b').addEventListener('click', function() {
                 callTimeout('B');
+            });
+            
+            // Set up event listeners for adding players
+            document.getElementById('add-player-a').addEventListener('click', function() {
+                addPlayer('A');
+            });
+            
+            document.getElementById('add-player-b').addEventListener('click', function() {
+                addPlayer('B');
             });
             
             // Initialize the tables and timer
