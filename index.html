@@ -6,34 +6,9 @@
     <title>Enhanced Match Statistics Form</title>
 
     <!-- Add Firebase SDK -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDpUB0SDEYVhy8J9LSHY4UoQmbXx3F6adU",
-            authDomain: "handballmatchstatisticscounter.firebaseapp.com",
-            projectId: "handballmatchstatisticscounter",
-            storageBucket: "handballmatchstatisticscounter.firebasestorage.app",
-            messagingSenderId: "801047095180",
-            appId: "1:801047095180:web:97ed51c9b2f1d025b158a9",
-            measurementId: "G-92CEXGX2N5"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // Make Firebase services available globally
-        window.db = db;
-        window.auth = auth;
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <style>
         body {
@@ -359,6 +334,70 @@
             color: #d32f2f;
             font-weight: bold;
         }
+        
+        /* Registration form styles */
+        .registration-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .registration-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .registration-team {
+            margin-bottom: 20px;
+        }
+        
+        .player-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .player-input-row input {
+            flex: 1;
+        }
+        
+        .start-match-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        
+        .start-match-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .add-player-btn {
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -588,6 +627,22 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Firebase configuration - REPLACE WITH YOUR ACTUAL CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpUB0SDEYVhy8J9LSHY4UoQmbXx3F6adU",
+            authDomain: "handballmatchstatisticscounter.firebaseapp.com",
+            projectId: "handballmatchstatisticscounter",
+            storageBucket: "handballmatchstatisticscounter.firebasestorage.app",
+            messagingSenderId: "801047095180",
+            appId: "1:801047095180:web:97ed51c9b2f1d025b158a9",
+            measurementId: "G-92CEXGX2N5"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
         // Initialize empty player data
         const players = {
             A: Array(16).fill().map((_, index) => ({
@@ -642,7 +697,7 @@
             timeoutStartTime: 0,
             timeoutEndTime: 0,
             timeoutTimer: null,
-            isPaused: false,
+            isPaused: true, // Start paused until registration is complete
             timerInterval: null,
             periodDurations: {
                 '1H': 30 * 60, // 30 minutes in seconds
@@ -659,7 +714,28 @@
             totalScores: { A: 0, B: 0 },
             isOnline: false,
             matchId: generateMatchId(),
-            lastSaved: null
+            lastSaved: null,
+            matchStarted: false,
+            registrationComplete: false
+        };
+
+        // Player registration data
+        // Registration data with customizable team names
+        const registrationData = {
+            teamA: {
+            name: "Team A",
+            players: [],
+            coach: "",
+            assistantCoach: "",
+            manager: ""
+            },
+            teamB: {
+            name: "Team B",
+            players: [],
+            coach: "",
+            assistantCoach: "",
+            manager: ""
+            }
         };
 
         // Context menu state
@@ -798,6 +874,7 @@
                     periodScores: gameState.periodScores,
                     totalScores: gameState.totalScores
                 },
+                registrationData: registrationData,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             };
             
@@ -818,6 +895,12 @@
                     renderTeamTable('A');
                     renderTeamTable('B');
                     setupCellClickHandlers();
+                }
+                
+                // Update registration data if available
+                if (data.registrationData) {
+                    registrationData.teamA = data.registrationData.teamA || registrationData.teamA;
+                    registrationData.teamB = data.registrationData.teamB || registrationData.teamB;
                 }
                 
                 // Update game state
@@ -853,6 +936,18 @@
 
         // Add a player to a team
         function addPlayer(team) {
+            if (gameState.matchStarted) {
+                // Check if we're past 1/4 of total match time
+                const totalMatchTime = gameState.periodDurations['1H'] + gameState.periodDurations['2H'] + 
+                                      gameState.periodDurations['ET1'] + gameState.periodDurations['ET2'];
+                const quarterTime = totalMatchTime / 4;
+                
+                if (gameState.seconds > quarterTime) {
+                    alert('Cannot add players after 1/4 of match time has elapsed');
+                    return;
+                }
+            }
+            
             const nameInput = document.getElementById(`player-name-${team.toLowerCase()}`);
             const numberInput = document.getElementById(`player-number-${team.toLowerCase()}`);
             
@@ -1477,6 +1572,237 @@
             }
         }
 
+        // Create registration form
+        function createRegistrationForm() {
+            const container = document.createElement('div');
+            container.className = 'registration-container';
+            container.id = 'registration-container';
+            
+            const form = document.createElement('div');
+            form.className = 'registration-form';
+            
+            // Team A registration
+            const teamAForm = createTeamRegistrationForm('A');
+            form.appendChild(teamAForm);
+            
+            // Team B registration
+            const teamBForm = createTeamRegistrationForm('B');
+            form.appendChild(teamBForm);
+            
+            // Start match button
+            const startButton = document.createElement('button');
+            startButton.className = 'start-match-btn';
+            startButton.id = 'start-match-btn';
+            startButton.textContent = 'Start Match';
+            startButton.disabled = true;
+            startButton.addEventListener('click', startMatch);
+            
+            form.appendChild(startButton);
+            container.appendChild(form);
+            document.body.appendChild(container);
+            
+            // Update start button state
+            updateStartButtonState();
+        }
+        
+        function createTeamRegistrationForm(team) {
+            const teamForm = document.createElement('div');
+            teamForm.className = 'registration-team';
+            
+            const teamTitle = document.createElement('h2');
+            teamTitle.textContent = `Team ${team} Registration`;
+            teamForm.appendChild(teamTitle);
+            
+            // Coach inputs
+            const coachInput = document.createElement('input');
+            coachInput.type = 'text';
+            coachInput.placeholder = `Head Coach for Team ${team}`;
+            coachInput.addEventListener('input', (e) => {
+                registrationData[`team${team}`].coach = e.target.value;
+                updateStartButtonState();
+            });
+            teamForm.appendChild(coachInput);
+            
+            const asstCoachInput = document.createElement('input');
+            asstCoachInput.type = 'text';
+            asstCoachInput.placeholder = `Assistant Coach for Team ${team}`;
+            asstCoachInput.addEventListener('input', (e) => {
+                registrationData[`team${team}`].assistantCoach = e.target.value;
+                updateStartButtonState();
+            });
+            teamForm.appendChild(asstCoachInput);
+            
+            const managerInput = document.createElement('input');
+            managerInput.type = 'text';
+            managerInput.placeholder = `Manager for Team ${team}`;
+            managerInput.addEventListener('input', (e) => {
+                registrationData[`team${team}`].manager = e.target.value;
+                updateStartButtonState();
+            });
+            teamForm.appendChild(managerInput);
+            
+            // Player inputs container
+            const playersContainer = document.createElement('div');
+            playersContainer.className = 'players-container';
+            
+            // Add player button
+            const addPlayerBtn = document.createElement('button');
+            addPlayerBtn.className = 'add-player-btn';
+            addPlayerBtn.textContent = `Add Player to Team ${team}`;
+            addPlayerBtn.addEventListener('click', () => addPlayerInput(team, playersContainer));
+            teamForm.appendChild(addPlayerBtn);
+            
+            // Add initial 5 player inputs
+            for (let i = 0; i < 5; i++) {
+                addPlayerInput(team, playersContainer);
+            }
+            
+            teamForm.appendChild(playersContainer);
+            return teamForm;
+        }
+        
+        function addPlayerInput(team, container) {
+            const playerRow = document.createElement('div');
+            playerRow.className = 'player-input-row';
+            
+            const numberInput = document.createElement('input');
+            numberInput.type = 'number';
+            numberInput.placeholder = 'Number';
+            numberInput.min = '1';
+            numberInput.max = '99';
+            numberInput.required = true;
+            
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Name';
+            nameInput.required = true;
+            
+            // Store player data when inputs change
+            const updatePlayerData = () => {
+                const playerIndex = Array.from(container.children).indexOf(playerRow);
+                if (playerIndex >= 0) {
+                    if (!registrationData[`team${team}`].players[playerIndex]) {
+                        registrationData[`team${team}`].players[playerIndex] = {};
+                    }
+                    registrationData[`team${team}`].players[playerIndex].number = numberInput.value;
+                    registrationData[`team${team}`].players[playerIndex].name = nameInput.value;
+                }
+                updateStartButtonState();
+            };
+            
+            numberInput.addEventListener('input', updatePlayerData);
+            nameInput.addEventListener('input', updatePlayerData);
+            
+            playerRow.appendChild(numberInput);
+            playerRow.appendChild(nameInput);
+            container.appendChild(playerRow);
+        }
+        
+        function updateStartButtonState() {
+            const startButton = document.getElementById('start-match-btn');
+            if (!startButton) return;
+            
+            // Check if both teams have at least 5 players with names and numbers
+            const teamAValid = registrationData.teamA.players.filter(p => p && p.name && p.number).length >= 5;
+            const teamBValid = registrationData.teamB.players.filter(p => p && p.name && p.number).length >= 5;
+            
+            // Check if coaches are provided
+            const coachesValid = registrationData.teamA.coach && registrationData.teamB.coach;
+            
+            startButton.disabled = !(teamAValid && teamBValid && coachesValid);
+        }
+        
+        function startMatch() {
+            // Populate players data from registration
+            populatePlayersFromRegistration();
+            
+            // Populate officials data
+            populateOfficialsFromRegistration();
+            
+            // Hide registration form
+            document.getElementById('registration-container').style.display = 'none';
+            
+            // Mark registration as complete
+            gameState.registrationComplete = true;
+            gameState.matchStarted = true;
+            
+            // Start the match timer
+            togglePause(); // This will start the timer since it's currently paused
+            
+            // Update UI to show match has started
+            document.getElementById('pause-btn').textContent = '⏸ Pause';
+            
+            // Auto-save if online
+            if (gameState.isOnline) {
+                saveGameState();
+            }
+        }
+        
+        function populatePlayersFromRegistration() {
+            // Team A players
+            registrationData.teamA.players.forEach((player, index) => {
+                if (player && player.name && player.number && index < 16) {
+                    players.A[index] = {
+                        id: index + 1,
+                        name: player.name,
+                        number: player.number,
+                        goals: 0,
+                        assists: 0,
+                        saves: 0,
+                        twoMinutes: 0,
+                        yellowCards: 0,
+                        redCard: false,
+                        steals: 0,
+                        blocks: 0,
+                        turnovers: 0,
+                        isEmpty: false,
+                        suspensionEndTime: 0,
+                        isSuspended: false
+                    };
+                }
+            });
+            
+            // Team B players
+            registrationData.teamB.players.forEach((player, index) => {
+                if (player && player.name && player.number && index < 16) {
+                    players.B[index] = {
+                        id: index + 1,
+                        name: player.name,
+                        number: player.number,
+                        goals: 0,
+                        assists: 0,
+                        saves: 0,
+                        twoMinutes: 0,
+                        yellowCards: 0,
+                        redCard: false,
+                        steals: 0,
+                        blocks: 0,
+                        turnovers: 0,
+                        isEmpty: false,
+                        suspensionEndTime: 0,
+                        isSuspended: false
+                    };
+                }
+            });
+            
+            // Render the tables
+            renderTeamTable('A');
+            renderTeamTable('B');
+            setupCellClickHandlers();
+        }
+        
+        function populateOfficialsFromRegistration() {
+            // Team A officials
+            document.querySelectorAll('#officials-body-a .official-name')[0].textContent = registrationData.teamA.coach;
+            document.querySelectorAll('#officials-body-a .official-name')[1].textContent = registrationData.teamA.assistantCoach;
+            document.querySelectorAll('#officials-body-a .official-name')[2].textContent = registrationData.teamA.manager;
+            
+            // Team B officials
+            document.querySelectorAll('#officials-body-b .official-name')[0].textContent = registrationData.teamB.coach;
+            document.querySelectorAll('#officials-body-b .official-name')[1].textContent = registrationData.teamB.assistantCoach;
+            document.querySelectorAll('#officials-body-b .official-name')[2].textContent = registrationData.teamB.manager;
+        }
+
         // Set up event listeners
         function setupEventListeners() {
             // Toggle suspension
@@ -1541,6 +1867,34 @@
                     updateAuthUI(null);
                 }
             });
+            // Registration button (show registration fields)
+            const loginForm = document.getElementById('login-form');
+            let registerBtn = document.getElementById('register-btn');
+            if (!registerBtn) {
+                registerBtn = document.createElement('button');
+                registerBtn.id = 'register-btn';
+                registerBtn.textContent = 'Register';
+                loginForm.insertBefore(registerBtn, document.getElementById('login-btn'));
+            }
+
+            // Register button handler
+            registerBtn.addEventListener('click', async function() {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+                if (!email || !password) {
+                    alert('Please enter both email and password');
+                    return;
+                }
+                try {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    alert('Registration successful. You are now logged in.');
+                    const user = await firebaseService.getCurrentUser();
+                    updateAuthUI(user);
+                    await loadGameState();
+                } catch (error) {
+                    alert('Registration failed: ' + error.message);
+                }
+            });
             
             // Login button
             document.getElementById('login-btn').addEventListener('click', async function() {
@@ -1570,9 +1924,12 @@
 
         // Initialize the application
         function initialize() {
+            // Show registration form first
+            createRegistrationForm();
+            
+            // Initialize tables (will be empty until registration is complete)
             initializeTables();
             setupEventListeners();
-            startTimer();
             updatePeriodHighlight();
             updateSuspensionButton();
             applyTimeConfig();
